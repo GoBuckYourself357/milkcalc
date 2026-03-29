@@ -430,16 +430,6 @@ const YOGURT_TYPES = [
     greek: false,
   },
   {
-    id: 'greek_whole',
-    name: 'Greek Yogurt',
-    color: '#F5C97A',
-    milkRatio: 3.0,
-    creamYield: 0.00,
-    wheyYield: GREEK_WHEY,
-    fatBase: 5.0,
-    greek: true,
-  },
-  {
     id: 'greek_lowfat',
     name: 'Greek Low-Fat (2%)',
     color: '#E8B96A',
@@ -455,6 +445,16 @@ const YOGURT_TYPES = [
     color: '#D4A25A',
     milkRatio: 3.0,
     creamYield: 0.035,
+    wheyYield: GREEK_WHEY,
+    fatBase: 0.0,
+    greek: true,
+  },
+  {
+    id: 'skyr_nonfat',
+    name: 'Non-Fat Skyr',
+    color: '#C47A3A',
+    milkRatio: 3.5,
+    creamYield: 0.040,
     wheyYield: GREEK_WHEY,
     fatBase: 0.0,
     greek: true,
@@ -486,7 +486,7 @@ function buildGrid() {
       <div class="card-header">
         <div class="card-dot" style="background:${type.color}"></div>
         <div>
-          <div class="card-title">${type.name}${type.greek ? '<span class="tag tag-greek">Greek</span>' : ''}</div>
+          <div class="card-title">${type.name}${type.id === 'skyr_nonfat' ? '<span class="tag tag-greek" style="background:rgba(196,122,58,0.15);color:#C47A3A;border-color:rgba(196,122,58,0.3);">Skyr</span>' : type.greek ? '<span class="tag tag-greek">Greek</span>' : ''}</div>
           <div class="card-subtitle">${type.milkRatio.toFixed(2)} lbs milk · ${type.wheyYield.toFixed(2)} lbs whey / lb yogurt</div>
         </div>
       </div>
