@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yogurt Production Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5EFE0;
+    --milk: #FDFAF3;
+    --slate: #2A2D35;
+    --steel: #3D4350;
+    --muted: #6B7280;
+    --accent: #D4622A;
+    --accent2: #4A90A4;
+    --whey: #C8A84B;
+    --green: #3D7A5A;
+    --border: rgba(42,45,53,0.12);
+    --shadow: 0 2px 12px rgba(42,45,53,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--slate);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--slate);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--cream);
+  }
+  .logo span { color: var(--accent); }
+  .header-right {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: rgba(245,239,224,0.5);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* LAYOUT */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    min-height: calc(100vh - 64px);
+  }
+
+  .left-panel {
+    padding: 32px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+  }
+
+  .right-panel {
+    background: var(--slate);
+    color: var(--cream);
+    padding: 32px;
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+  }
+
+  /* SECTION TITLES */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* YOGURT CARDS GRID */
+  .yogurt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .yogurt-card {
+    background: var(--milk);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s;
+  }
+  .yogurt-card:hover { box-shadow: 0 4px 20px rgba(42,45,53,0.12); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .card-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .card-title {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  .card-subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .size-rows { display: flex; flex-direction: column; gap: 8px; }
+
+  .size-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 60px;
+    gap: 8px;
+    align-items: center;
+  }
+  .size-name {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .qty-input {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--slate);
+    width: 100%;
+    text-align: right;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+  .qty-input::-webkit-outer-spin-button,
+  .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .qty-input:focus { outline: none; border-color: var(--accent2); background: white; }
+  .unit-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    white-space: nowrap;
+  }
+
+  /* RIGHT PANEL - RESULTS */
+  .results-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--cream);
+    margin-bottom: 4px;
+  }
+  .results-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: rgba(245,239,224,0.4);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .big-metric {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .big-metric-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(245,239,224,0.5);
+    margin-bottom: 6px;
+  }
+  .big-metric-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .big-metric-unit {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: rgba(245,239,224,0.5);
+    margin-top: 4px;
+  }
+  .big-metric-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: rgba(245,239,224,0.4);
+    margin-top: 2px;
+  }
+
+  .milk-color { color: #A8D8EA; }
+  .cream-color { color: #F5C97A; }
+  .whey-color { color: #8BC4A0; }
+
+  .byproducts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .byproduct-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 6px;
+    padding: 14px;
+  }
+  .byproduct-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .byproduct-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    line-height: 1;
+  }
+  .byproduct-unit {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: rgba(245,239,224,0.4);
+    margin-top: 2px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin: 20px 0;
+  }
+
+  .breakdown-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(245,239,224,0.4);
+    margin-bottom: 12px;
+  }
+
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+  }
+  .breakdown-name { color: rgba(245,239,224,0.7); }
+  .breakdown-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--cream);
+  }
+
+  .zero-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(245,239,224,0.25);
+  }
+  .zero-state-icon { font-size: 48px; margin-bottom: 12px; }
+  .zero-state-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    line-height: 1.8;
+  }
+
+  .clear-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(245,239,224,0.5);
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+    margin-top: 16px;
+  }
+  .clear-btn:hover {
+    border-color: rgba(255,255,255,0.3);
+    color: var(--cream);
+    background: rgba(255,255,255,0.05);
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .tag-greek { background: rgba(212,98,42,0.15); color: var(--accent); border: 1px solid rgba(212,98,42,0.3); }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .right-panel { position: relative; height: auto; top: 0; }
+    .yogurt-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">DAIRY<span>PLAN</span></div>
+  <div class="header-right" style="display:flex;align-items:center;gap:12px;">
+    <span style="opacity:0.5;">Production Loss</span>
+    <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:4px 10px;">
+      <input id="lossInput" type="number" min="0" max="20" step="0.5" value="3"
+        style="background:none;border:none;color:#F5EFE0;font-family:'DM Mono',monospace;font-size:13px;width:36px;text-align:right;outline:none;-moz-appearance:textfield;"
+        oninput="recalculate()"
+      />
+      <span style="color:rgba(245,239,224,0.5);font-family:'DM Mono',monospace;font-size:12px;">%</span>
+    </div>
+    <span style="opacity:0.3;font-size:10px;letter-spacing:1px;">PRODUCTION DEMAND CALCULATOR</span>
+  </div>
+</header>
+
+<div class="main">
+  <!-- LEFT: INPUT PANEL -->
+  <div class="left-panel">
+    <div class="section-label">Demand Entry — Units per SKU</div>
+    <div class="yogurt-grid" id="yogurtGrid"></div>
+  </div>
+
+  <!-- RIGHT: RESULTS PANEL -->
+  <div class="right-panel">
+    <div class="results-title">Order Summary</div>
+    <div class="results-sub" id="resultsSub">Live Calculation &nbsp;·&nbsp; +3% loss factored in</div>
+    <div id="resultsArea">
+      <div class="zero-state">
+        <div class="zero-state-icon">🥛</div>
+        <div class="zero-state-text">Enter demand quantities<br>to calculate requirements</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  DATA MODEL
+// ============================================================
+
+// Industry-standard ratios (lbs milk needed per lb of finished yogurt)
+// Regular yogurt: ~1.05 lbs milk per lb yogurt (slight evaporation loss)
+// Greek yogurt:   ~3.0  lbs milk per lb yogurt (whey pressed off)
+// Cream byproduct only applies when standardizing fat (from whole→lower fat)
+// Whey byproduct is significant for Greek
+
+// Whey from fermentation separation:
+// Plant data: 8,500 gal tank → ~1/3 separates as whey → ~2,833 gal whey, ~5,667 gal yogurt
+// By weight: whey ≈ 0.50 lbs per lb of finished regular yogurt
+//   (milk goes in, ~33% of fermented volume becomes whey before the yogurt is packaged;
+//    expressed relative to finished yogurt: 0.33 vol fraction / 0.67 yogurt fraction ≈ 0.50)
+// Greek: fermentation whey PLUS heavy straining whey → ~2.15 lbs/lb total
+const FERMENT_WHEY = 0.50; // lbs whey per lb finished regular yogurt
+const GREEK_WHEY   = 2.15; // lbs whey per lb finished Greek yogurt (ferment + strain)
+
+const YOGURT_TYPES = [
+  {
+    id: 'whole',
+    name: 'Whole Milk Yogurt',
+    color: '#A8D8EA',
+    milkRatio: 1.06,
+    creamYield: 0.00,
+    wheyYield: FERMENT_WHEY,
+    fatBase: 3.25,
+    greek: false,
+  },
+  {
+    id: 'lowfat',
+    name: 'Low-Fat (2%) Yogurt',
+    color: '#B5C8E2',
+    milkRatio: 1.06,
+    creamYield: 0.013,
+    wheyYield: FERMENT_WHEY,
+    fatBase: 2.0,
+    greek: false,
+  },
+  {
+    id: 'nonfat',
+    name: 'Non-Fat Yogurt',
+    color: '#C8D8E8',
+    milkRatio: 1.06,
+    creamYield: 0.028,
+    wheyYield: FERMENT_WHEY,
+    fatBase: 0.0,
+    greek: false,
+  },
+  {
+    id: 'greek_whole',
+    name: 'Greek Yogurt',
+    color: '#F5C97A',
+    milkRatio: 3.0,
+    creamYield: 0.00,
+    wheyYield: GREEK_WHEY,
+    fatBase: 5.0,
+    greek: true,
+  },
+  {
+    id: 'greek_lowfat',
+    name: 'Greek Low-Fat (2%)',
+    color: '#E8B96A',
+    milkRatio: 3.0,
+    creamYield: 0.018,
+    wheyYield: GREEK_WHEY,
+    fatBase: 2.0,
+    greek: true,
+  },
+  {
+    id: 'greek_nonfat',
+    name: 'Greek Non-Fat',
+    color: '#D4A25A',
+    milkRatio: 3.0,
+    creamYield: 0.035,
+    wheyYield: GREEK_WHEY,
+    fatBase: 0.0,
+    greek: true,
+  },
+];
+
+const SIZES = [
+  { id: 'pouch_kid',  name: 'Kids Pouch',    oz: 3.5,  label: '3.5 oz pouch' },
+  { id: 'pouch_adult',name: 'Adult Pouch',   oz: 4.4,  label: '4.4 oz pouch' },
+  { id: 's53',        name: '5.3 oz Cup',    oz: 5.3,  label: '5.3 oz cup'   },
+  { id: 's24',        name: '24 oz Cup',     oz: 24.0, label: '24 oz cup'    },
+  { id: 's32',        name: '32 oz Quart',   oz: 32.0, label: '32 oz quart'  },
+];
+
+// State: { typeId_sizeId: qty }
+const demand = {};
+
+// ============================================================
+//  BUILD UI
+// ============================================================
+function buildGrid() {
+  const grid = document.getElementById('yogurtGrid');
+  grid.innerHTML = '';
+
+  YOGURT_TYPES.forEach(type => {
+    const card = document.createElement('div');
+    card.className = 'yogurt-card';
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-dot" style="background:${type.color}"></div>
+        <div>
+          <div class="card-title">${type.name}${type.greek ? '<span class="tag tag-greek">Greek</span>' : ''}</div>
+          <div class="card-subtitle">${type.milkRatio.toFixed(2)} lbs milk · ${type.wheyYield.toFixed(2)} lbs whey / lb yogurt</div>
+        </div>
+      </div>
+      <div class="size-rows">
+        ${SIZES.map(size => `
+          <div class="size-row">
+            <span class="size-name">${size.label}</span>
+            <input
+              class="qty-input"
+              type="number"
+              min="0"
+              placeholder="0"
+              data-type="${type.id}"
+              data-size="${size.id}"
+              inputmode="numeric"
+            />
+            <span class="unit-label">cups</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Attach listeners
+  document.querySelectorAll('.qty-input').forEach(input => {
+    input.addEventListener('input', () => {
+      const key = `${input.dataset.type}_${input.dataset.size}`;
+      const val = parseFloat(input.value) || 0;
+      demand[key] = val;
+      recalculate();
+    });
+  });
+}
+
+// ============================================================
+//  CALCULATION
+// ============================================================
+function recalculate() {
+  const lossPct = parseFloat(document.getElementById('lossInput')?.value) || 3;
+  const LOSS = 1 + (lossPct / 100);
+  let totalMilkLbs = 0;
+  let totalCreamLbs = 0;
+  let totalWheyLbs = 0;
+  let totalYogurtLbs = 0;
+  const breakdown = [];
+
+  YOGURT_TYPES.forEach(type => {
+    let typeTotalYogurtLbs = 0;
+
+    SIZES.forEach(size => {
+      const key = `${type.id}_${size.id}`;
+      const qty = demand[key] || 0;
+      if (qty > 0) {
+        const yogurtLbs = qty * (size.oz / 16) * LOSS; // convert oz to lbs + 3% loss
+        typeTotalYogurtLbs += yogurtLbs;
+      }
+    });
+
+    if (typeTotalYogurtLbs > 0) {
+      const milk = typeTotalYogurtLbs * type.milkRatio;
+      const cream = typeTotalYogurtLbs * type.creamYield;
+      const whey = typeTotalYogurtLbs * type.wheyYield;
+      totalMilkLbs += milk;
+      totalCreamLbs += cream;
+      totalWheyLbs += whey;
+      totalYogurtLbs += typeTotalYogurtLbs;
+      breakdown.push({
+        name: type.name,
+        yogurtLbs: typeTotalYogurtLbs,
+        milkLbs: milk,
+        color: type.color,
+      });
+    }
+  });
+
+  renderResults(totalMilkLbs, totalCreamLbs, totalWheyLbs, totalYogurtLbs, breakdown);
+}
+
+function lbsToGallons(lbs) { return lbs / 8.6; } // ~8.6 lbs per gallon whole milk
+function fmt(n, decimals=0) { return n.toLocaleString('en-US', {minimumFractionDigits:decimals, maximumFractionDigits:decimals}); }
+
+function renderResults(milkLbs, creamLbs, wheyLbs, yogurtLbs, breakdown) {
+  const area = document.getElementById('resultsArea');
+
+  if (yogurtLbs === 0) {
+    area.innerHTML = `
+      <div class="zero-state">
+        <div class="zero-state-icon">🥛</div>
+        <div class="zero-state-text">Enter demand quantities<br>to calculate requirements</div>
+      </div>`;
+    return;
+  }
+
+  const lossPct2 = parseFloat(document.getElementById('lossInput')?.value) || 3;
+  const sub = document.getElementById('resultsSub');
+  if (sub) sub.innerHTML = `Live Calculation &nbsp;·&nbsp; +${lossPct2}% loss factored in`;
+  const milkGal = lbsToGallons(milkLbs);
+  const creamGal = lbsToGallons(creamLbs) * (8.6/8.3); // cream ~8.3 lbs/gal
+  const wheyGal  = lbsToGallons(wheyLbs);
+  const TANK_GAL = 8500;
+  const wheyTanks = wheyGal / TANK_GAL;
+
+  area.innerHTML = `
+    <div class="big-metric">
+      <div class="big-metric-label">🥛 Milk to Order</div>
+      <div class="big-metric-value milk-color">${fmt(milkGal, 1)}</div>
+      <div class="big-metric-unit">gallons</div>
+      <div class="big-metric-sub">${fmt(milkLbs, 0)} lbs &nbsp;·&nbsp; ${fmt(milkGal/100, 1)} cwt</div>
+    </div>
+
+    <div class="byproducts-grid">
+      <div class="byproduct-card">
+        <div class="byproduct-label cream-color">🧈 Cream Out</div>
+        <div class="byproduct-value cream-color">${fmt(creamLbs, 0)}</div>
+        <div class="byproduct-unit">lbs &nbsp;(${fmt(creamGal,1)} gal)</div>
+      </div>
+      <div class="byproduct-card">
+        <div class="byproduct-label whey-color">💧 Whey Out</div>
+        <div class="byproduct-value whey-color">${fmt(wheyLbs, 0)}</div>
+        <div class="byproduct-unit">lbs · ${fmt(wheyGal,1)} gal</div><div class="byproduct-unit">${fmt(wheyTanks,2)} truck tanks</div>
+      </div>
+    </div>
+
+    <div class="big-metric" style="padding:14px 20px;">
+      <div class="big-metric-label">📦 Total Yogurt Produced</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--cream);">${fmt(yogurtLbs, 1)} <span style="font-size:16px;color:rgba(245,239,224,0.5);">lbs</span></div>
+      <div class="big-metric-sub">${fmt(yogurtLbs/16, 1)} oz total &nbsp;·&nbsp; ~${fmt(yogurtLbs/0.333,0)} avg cups</div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="breakdown-title">Milk by Yogurt Type</div>
+    ${breakdown.map(b => `
+      <div class="breakdown-row">
+        <div class="breakdown-name">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${b.color};margin-right:6px;vertical-align:middle;"></span>
+          ${b.name}
+        </div>
+        <div class="breakdown-val">${fmt(lbsToGallons(b.milkLbs),1)} gal</div>
+      </div>
+    `).join('')}
+
+    <button class="clear-btn" onclick="clearAll()">⟳ Clear All Inputs</button>
+  `;
+}
+
+function clearAll() {
+  document.querySelectorAll('.qty-input').forEach(i => { i.value = ''; });
+  Object.keys(demand).forEach(k => delete demand[k]);
+  recalculate();
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+buildGrid();
+recalculate();
+</script>
+</body>
+</html>
